@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>Один человек + AI-команда — Pe4King</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>deck-stage:not(:defined){visibility:hidden}</style>
+<script src="deck-stage.js"></script>
+<style>
+:root{
+  --bg:#080b11; --panel:#0d131c; --panel-2:#0a0f16; --line:rgba(150,180,210,0.10);
+  --ink:#eaf1f8; --mut:#93a3b6; --mut-2:#66768a;
+  --c-owner:#4aa3ff; --c-lead:#b98cff; --c-cc:#ff9a52; --c-sonnet:#ffd24a;
+  --c-art:#3fdca0; --c-gate:#ff6470; --c-ext:#96a4b6;
+  --type-huge:126px; --type-title:60px; --type-sub:31px; --type-body:27px; --type-small:22px; --type-kick:19px;
+  --padx:96px; --padt:60px; --padb:64px;
+  --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+html,body{background:#000;margin:0}
+deck-stage{font-family:"Golos Text","Helvetica Neue",Arial,sans-serif;color:var(--ink)}
+deck-stage > section{
+  background:
+    radial-gradient(120% 90% at 100% -10%, rgba(74,163,255,0.08), transparent 55%),
+    radial-gradient(120% 90% at -10% 110%, rgba(63,220,160,0.06), transparent 55%),
+    var(--bg);
+  box-sizing:border-box; position:relative; overflow:hidden;
+  padding:var(--padt) var(--padx) var(--padb);
+  display:flex; flex-direction:column;
+}
+/* dotted engineering grid */
+deck-stage > section::before{
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+  background-image:radial-gradient(rgba(150,180,210,0.10) 1.15px, transparent 1.15px);
+  background-size:46px 46px; background-position:-8px -8px;
+  -webkit-mask-image:radial-gradient(130% 120% at 50% 40%, #000 55%, transparent 100%);
+          mask-image:radial-gradient(130% 120% at 50% 40%, #000 55%, transparent 100%);
+  opacity:.5;
+}
+.stage{position:relative; z-index:2; display:flex; flex-direction:column; height:100%}
+b,strong{color:#fff;font-weight:700}
+
+/* ---------- top bar ---------- */
+.top{display:flex; justify-content:space-between; align-items:center; margin-bottom:26px}
+.kick{display:inline-flex; align-items:center; gap:12px; font-family:var(--mono);
+  font-size:var(--type-kick); letter-spacing:.06em; color:var(--mut); font-weight:500}
+.kick .idx{color:#04121a; background:linear-gradient(135deg,var(--c-art),#2bd4d0);
+  font-weight:700; border-radius:8px; padding:4px 10px; letter-spacing:.02em}
+.count{font-family:var(--mono); font-size:var(--type-small); color:var(--mut-2); letter-spacing:.08em}
+h2.title{font-size:var(--type-title); line-height:1.05; letter-spacing:-0.025em; font-weight:800; margin:0; max-width:1640px; text-wrap:balance; overflow-wrap:break-word}
+.sub{font-size:var(--type-sub); color:var(--mut); font-weight:500; margin:14px 0 0; max-width:1400px; line-height:1.35; text-wrap:pretty}
+.accent{color:var(--c-art)}
+
+/* ---------- caption note ---------- */
+.note{font-family:var(--mono); font-size:19px; color:var(--mut-2); letter-spacing:.02em; line-height:1.45; margin:0; text-align:center; text-wrap:pretty}
+/* trailing caption slides: pull the diagram up so the bottom margin matches the other slides */
+section:has(.stage > .note) .area, section:has(.stage > .sub:last-child) .area{margin-bottom:-20px}
+.note b{color:var(--mut)}
+
+/* ---------- extra dynamics ---------- */
+section[data-deck-active] .flo{animation:flo 5s ease-in-out infinite; animation-delay:calc(var(--i,0)*180ms + .9s)}
+@keyframes flo{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+section[data-deck-active] .breathe{animation:breathe 3.4s ease-in-out infinite; animation-delay:1s}
+@keyframes breathe{0%,100%{box-shadow:0 14px 34px rgba(0,0,0,.28)}50%{box-shadow:0 14px 44px color-mix(in oklab,var(--c,var(--c-art)) 38%,transparent)}}
+.kick .idx{position:relative}
+section[data-deck-active] .kick .idx{animation:idxglow 2.8s ease-in-out infinite}
+@keyframes idxglow{0%,100%{box-shadow:0 0 0 0 rgba(63,220,160,0)}50%{box-shadow:0 0 18px 2px rgba(63,220,160,.45)}}
+.ticket{position:absolute; top:-30px; left:0; padding:6px 14px; border-radius:9px;
+  background:linear-gradient(135deg,var(--c-art),#2bd4d0); color:#04121a; font-family:var(--mono); font-size:15px; font-weight:700;
+  box-shadow:0 0 22px color-mix(in oklab,var(--c-art) 60%,transparent); opacity:0; white-space:nowrap; z-index:5}
+section[data-deck-active] .ticket{animation:ride 6.5s cubic-bezier(.45,0,.55,1) 1.3s infinite}
+@keyframes ride{0%{left:0;opacity:0}5%{opacity:1}92%{opacity:1}100%{left:calc(100% - 90px);opacity:0}}
+section[data-deck-active] .swell{animation:swell 3s ease-in-out infinite; animation-delay:calc(var(--i,0)*200ms + 1s)}
+@keyframes swell{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+
+/* ---------- entrance animation ---------- */
+.r{opacity:0; transform:translateY(20px);
+  transition:opacity .62s cubic-bezier(.2,.7,.2,1), transform .62s cubic-bezier(.2,.7,.2,1);
+  transition-delay:calc(var(--i,0)*95ms)}
+section[data-deck-active] .r{opacity:1; transform:none}
+.r.pop{transform:translateY(10px) scale(.94)}
+section[data-deck-active] .r.pop{transform:none}
+@media print{ .r{opacity:1!important; transform:none!important; transition:none!important} }
+
+/* ---------- nodes ---------- */
+.nd{box-sizing:border-box; position:relative; display:flex; flex-direction:column; gap:6px;
+  padding:23px 27px 23px; border-radius:17px;
+  background:color-mix(in oklab, var(--c) 12%, var(--panel));
+  border:1px solid color-mix(in oklab, var(--c) 42%, transparent);
+  box-shadow:0 14px 34px color-mix(in oklab, var(--c) 16%, transparent), inset 0 1px 0 rgba(255,255,255,.05);
+  --c:var(--c-ext)}
+.nd::before{content:""; position:absolute; left:0; top:14px; bottom:14px; width:4px; border-radius:4px; background:var(--c)}
+.nd .nt{font-size:26px; font-weight:700; color:#fff; letter-spacing:-.01em}
+.nd .ns{font-family:var(--mono); font-size:17px; color:var(--mut); font-weight:500; line-height:1.4}
+.nd.sm{padding:16px 20px; gap:4px}
+.nd.sm .nt{font-size:22px}
+.nd.sm .ns{font-size:15px}
+.nd.sm::before{top:11px; bottom:11px; width:3px}
+.nd.mini{padding:16px 10px}
+.nd.mini .nt{font-size:21px}
+.nd.mini::before{left:0; top:10px; bottom:10px; width:3px}
+.owner{--c:var(--c-owner)} .lead{--c:var(--c-lead)} .cc{--c:var(--c-cc)}
+.sonnet{--c:var(--c-sonnet)} .art{--c:var(--c-art)} .gate{--c:var(--c-gate)} .ext{--c:var(--c-ext)}
+
+/* ---------- legend ---------- */
+.legend{display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center}
+.lg{display:inline-flex; align-items:center; gap:9px; font-size:19px; color:var(--mut); font-family:var(--mono)}
+.lg i{width:14px; height:14px; border-radius:4px; background:var(--c); box-shadow:0 0 10px color-mix(in oklab,var(--c) 60%,transparent); --c:var(--c-ext)}
+.lg.owner i{--c:var(--c-owner)} .lg.lead i{--c:var(--c-lead)} .lg.cc i{--c:var(--c-cc)}
+.lg.sonnet i{--c:var(--c-sonnet)} .lg.art i{--c:var(--c-art)} .lg.gate i{--c:var(--c-gate)} .lg.ext i{--c:var(--c-ext)}
+
+/* ---------- flow rail (data flowing) ---------- */
+.rail{position:relative; height:4px; background:rgba(150,180,210,.14); border-radius:99px; overflow:hidden; --flow:var(--c-art)}
+.rail::after{content:""; position:absolute; top:0; left:0; height:100%; width:34%;
+  background:linear-gradient(90deg, transparent, var(--flow), transparent);
+  transform:translateX(-140%)}
+section[data-deck-active] .rail::after{animation:rf 1.9s linear infinite}
+@keyframes rf{to{transform:translateX(360%)}}
+.rail.v{width:4px; height:auto}
+.rail.v::after{width:100%; height:34%; background:linear-gradient(180deg,transparent,var(--flow),transparent); transform:translateY(-140%)}
+section[data-deck-active] .rail.v::after{animation:rfv 1.9s linear infinite}
+@keyframes rfv{to{transform:translateY(360%)}}
+.ah{width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent;border-left:12px solid var(--flow,#3fdca0); filter:drop-shadow(0 0 6px color-mix(in oklab,var(--flow,#3fdca0) 60%,transparent))}
+.ah.dn{border-left:8px solid transparent;border-right:8px solid transparent;border-top:12px solid var(--flow,#3fdca0);border-bottom:0}
+
+/* svg wires */
+.wire{stroke:rgba(150,180,210,.22); stroke-width:2.4; fill:none}
+.flow{fill:none; stroke-width:3; stroke-linecap:round; stroke-dasharray:2 16; opacity:.95}
+section[data-deck-active] .flow{animation:draw 1.5s linear infinite}
+@keyframes draw{to{stroke-dashoffset:-72}}
+.flow-draw{fill:none; stroke-width:3; stroke-linecap:round; stroke-dasharray:1000; stroke-dashoffset:1000}
+section[data-deck-active] .flow-draw{animation:drawline 1.1s ease forwards; animation-delay:.5s}
+@keyframes drawline{to{stroke-dashoffset:0}}
+
+/* mono artifact card */
+.file{background:var(--panel-2); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:0 18px 46px rgba(0,0,0,.4)}
+.file .fh{display:flex; align-items:center; gap:10px; padding:16px 22px; background:rgba(150,180,210,.05); border-bottom:1px solid var(--line); font-family:var(--mono); font-size:18px; color:var(--mut)}
+.file .dots{display:flex; gap:7px}
+.file .dots i{width:11px;height:11px;border-radius:50%;background:#33404f}
+.file .body{padding:22px 26px; font-family:var(--mono); font-size:21px; line-height:1.75; color:#cdd9e6}
+.cmt{color:var(--mut-2)}
+.tokk{color:var(--c-art)} .tokr{color:var(--c-gate)} .toky{color:var(--c-sonnet)} .tokb{color:var(--c-owner)}
+
+/* generic panel */
+.panel{background:linear-gradient(180deg, rgba(150,180,210,.05), rgba(150,180,210,.02)); border:1px solid var(--line); border-radius:18px}
+
+/* chips row */
+.chips{display:flex; gap:12px; flex-wrap:wrap}
+.chip{font-family:var(--mono); font-size:18px; color:var(--mut); padding:11px 17px; border-radius:11px; border:1px solid var(--line); background:rgba(150,180,210,.04)}
+
+/* stage area helper */
+.area{flex:1; min-height:0; display:flex; position:relative}
+
+/* ============ COVER (1) ============ */
+section.cover{padding:0}
+.cover .stage{align-items:center; justify-content:center; padding:0 var(--padx)}
+.cover-in{width:100%; max-width:1500px; display:grid; grid-template-columns:1.24fr .76fr; gap:70px; align-items:center}
+.cover .ey{font-family:var(--mono); font-size:19px; letter-spacing:.18em; text-transform:uppercase; color:var(--c-art); font-weight:600; margin-bottom:26px}
+.cover h1{font-size:84px; line-height:1.02; letter-spacing:-0.035em; font-weight:900; margin:0; color:#fff; text-wrap:balance}
+.cover h1 em{font-style:normal; color:var(--c-owner)}
+.cover .cs{font-size:27px; color:var(--mut); line-height:1.4; margin:32px 0 0; max-width:760px; text-wrap:pretty}
+.cover .brand{margin-top:44px; display:flex; align-items:center; gap:16px; font-family:var(--mono); font-size:18px; color:var(--mut-2)}
+.cover .brand .lp{height:30px}
+/* fan diagram */
+.fan{position:relative; width:440px; height:440px; margin:0 auto; --c:var(--c-ext)}
+.fan .core{position:absolute; left:50%; top:50%; width:120px; height:120px; margin:-60px 0 0 -60px; border-radius:50%;
+  background:color-mix(in oklab,var(--c-owner) 22%,var(--panel)); border:2px solid var(--c-owner);
+  display:flex; align-items:center; justify-content:center; box-shadow:0 0 44px color-mix(in oklab,var(--c-owner) 45%,transparent); z-index:3}
+.fan .core svg{width:58px;height:58px;stroke:var(--c-owner);fill:none;stroke-width:2}
+.fan .spoke{position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:12px;
+  display:flex;align-items:center;justify-content:center; background:color-mix(in oklab,var(--c) 20%,var(--panel));
+  border:1.6px solid var(--c); box-shadow:0 0 22px color-mix(in oklab,var(--c) 45%,transparent);
+  opacity:0; transform:translate(0,0) scale(.4); transition:opacity .5s ease, transform .7s cubic-bezier(.2,.8,.2,1)}
+.fan .spoke svg{width:22px;height:22px;stroke:var(--c);fill:none;stroke-width:2.2}
+section[data-deck-active] .fan .spoke{opacity:1}
+section[data-deck-active] .fan .spoke{transform:translate(var(--tx),var(--ty)) scale(1)}
+.fan .ring{position:absolute; inset:60px; border:1px dashed rgba(150,180,210,.18); border-radius:50%}
+
+/* ============ pipeline (5,20) ============ */
+.pipe{display:flex; align-items:stretch; gap:16px; width:100%}
+.station{flex:1; display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; position:relative; --c:var(--c-ext)}
+.station .box{box-sizing:border-box; width:100%; min-height:124px; border-radius:15px; padding:16px 12px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+  background:color-mix(in oklab,var(--c) 12%,var(--panel)); border:1px solid color-mix(in oklab,var(--c) 40%,transparent)}
+.station .box .st{font-size:22px; font-weight:700; color:#fff; line-height:1.1}
+.station .box .sc{font-family:var(--mono); font-size:15px; color:var(--mut)}
+.station .conn{position:absolute; top:52px; right:-1px; width:2px}
+
+/* ============ misc ============ */
+.two{display:grid; grid-template-columns:1fr 1fr; gap:28px}
+.three{display:grid; grid-template-columns:repeat(3,1fr); gap:22px}
+.four{display:grid; grid-template-columns:repeat(4,1fr); gap:20px}
+.bignum{font-family:var(--mono); font-weight:700; font-size:var(--type-huge); line-height:.9; letter-spacing:-.04em;
+  background:linear-gradient(150deg,var(--c-art),#2bd4d0); -webkit-background-clip:text; background-clip:text; color:transparent}
+.tag{display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:15px; padding:6px 12px; border-radius:8px; font-weight:600}
+.tag.red{color:var(--c-gate); background:color-mix(in oklab,var(--c-gate) 16%,transparent); border:1px solid color-mix(in oklab,var(--c-gate) 40%,transparent)}
+.tag.grn{color:var(--c-art); background:color-mix(in oklab,var(--c-art) 16%,transparent); border:1px solid color-mix(in oklab,var(--c-art) 40%,transparent)}
+.gate-bar{position:relative}
+.gate-bar::before{content:""; position:absolute; inset:-6px -4px; border:2px dashed var(--c-gate); border-radius:12px; opacity:.0}
+section[data-deck-active] .gate-bar::before{animation:blink 1.3s ease-in-out infinite; animation-delay:1s}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:.9}}
+
+/* list */
+ul.pts{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:18px}
+ul.pts li{position:relative; padding-left:34px; font-size:var(--type-body); line-height:1.4; color:#d6e0ea; text-wrap:pretty}
+ul.pts li::before{content:""; position:absolute; left:0; top:13px; width:18px; height:3px; border-radius:2px; background:linear-gradient(90deg,var(--c-art),#2bd4d0)}
+ul.pts li b{color:#fff}
+.mono{font-family:var(--mono)}
+
+/* closing */
+.mag{width:52px; height:52px; color:var(--c-lead)}
+.mag svg{width:100%; height:100%; filter:drop-shadow(0 0 12px color-mix(in oklab,var(--c-lead) 55%,transparent))}
+section.closing{background:radial-gradient(80% 70% at 50% 0%, rgba(74,163,255,.10), transparent 60%), var(--bg)}
+.closing h2{font-size:70px; font-weight:900; letter-spacing:-.03em; margin:0; color:#fff}
+</style>
+</head>
+<body>
+
+<deck-stage width="1920" height="1080">
+
+<!-- ===================== 1 · COVER ===================== -->
+<section class="cover" data-screen-label="01 Титул" data-label="Титул">
+  <div class="stage">
+    <div class="cover-in">
+      <div>
+        <div class="ey r">Практика · 3 месяца живого проекта</div>
+        <h1 class="r" style="--i:1">Один человек <em>+</em> AI-команда:<br />как реально шипается продукт</h1>
+        <p class="cs r" style="--i:2">60+ релизов desktop-приложения силами одного владельца и оркестра моделей. Не концепт — живой проект, цифры настоящие.</p>
+        <div class="brand r" style="--i:3"><b style="color:#fff">Pe4King</b><span>·</span>Claude Opus / Sonnet · Claude Code · Kimi · GLM</div>
+      </div>
+      <div class="fan r" style="--i:2">
+        <div class="ring"></div>
+        <div class="core"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></div>
+        <div class="spoke lead"   style="--tx:-160px;--ty:-70px;transition-delay:.35s"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg></div>
+        <div class="spoke cc"     style="--tx:-120px;--ty:95px;transition-delay:.45s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/></svg></div>
+        <div class="spoke sonnet" style="--tx:0px;--ty:165px;transition-delay:.55s"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg></div>
+        <div class="spoke art"    style="--tx:160px;--ty:95px;transition-delay:.65s"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg></div>
+        <div class="spoke ext"    style="--tx:170px;--ty:-70px;transition-delay:.75s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4a13 13 0 0 1 0 16M12 4a13 13 0 0 0 0 16"/></svg></div>
+        <div class="spoke gate"   style="--tx:0px;--ty:-165px;transition-delay:.85s"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 2 · PRODUCT ===================== -->
+<section data-screen-label="02 Продукт" data-label="Продукт">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">02</span> Продукт в двух словах</span><span class="count">02 / 20</span></div>
+    <h2 class="title r">Pe4King — desktop API-клиент для QA</h2>
+    <p class="sub r" style="--i:1">HTTP / gRPC / SOAP + расширение VS Code · Tauri (Rust) + React · пользователи — QA-инженеры enterprise · телеком-заказчик мигрирует с SoapUI.</p>
+    <div class="area" style="align-items:center; justify-content:center">
+      <div style="display:flex; align-items:center; gap:48px">
+        <div style="display:flex; flex-direction:column; gap:20px">
+          <div class="nd art r" style="--i:1"><span class="nt">HTTP</span><span class="ns">REST · запросы</span></div>
+          <div class="nd art r" style="--i:2"><span class="nt">gRPC</span><span class="ns">стримы · proto</span></div>
+          <div class="nd art r" style="--i:3"><span class="nt">SOAP</span><span class="ns">WSDL · XML</span></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:14px; width:210px">
+          <div class="rail r" style="--i:2; --flow:var(--c-art)"></div>
+          <div class="rail r" style="--i:3; --flow:var(--c-art)"></div>
+          <div class="rail r" style="--i:4; --flow:var(--c-art)"></div>
+        </div>
+        <div class="panel r" style="--i:4; width:440px; padding:0; overflow:hidden">
+          <div style="display:flex; align-items:center; gap:9px; padding:14px 20px; border-bottom:1px solid var(--line); font-family:var(--mono); font-size:15px; color:var(--mut)">
+            <span class="dots" style="display:flex;gap:7px"><i style="width:11px;height:11px;border-radius:50%;background:#ff6470;display:inline-block"></i><i style="width:11px;height:11px;border-radius:50%;background:#ffd24a;display:inline-block"></i><i style="width:11px;height:11px;border-radius:50%;background:#3fdca0;display:inline-block"></i></span>
+            Pe4King
+          </div>
+          <div style="padding:26px 24px; display:flex; flex-direction:column; gap:14px">
+            <div class="chip" style="width:100%; box-sizing:border-box">GET  /v2/orders  ·  200 OK  ·  84 ms</div>
+            <div class="chip" style="width:100%; box-sizing:border-box; color:var(--c-sonnet)">rpc StreamPrices()  ·  streaming…</div>
+            <div class="chip" style="width:100%; box-sizing:border-box">WSDL → операции: 42</div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px">
+          <span class="chip r" style="--i:5">Windows</span>
+          <span class="chip r" style="--i:5">Linux ALT</span>
+          <span class="chip r" style="--i:6">VS Code</span>
+        </div>
+      </div>
+    </div>
+    <p class="note r" style="--i:6">Три протокола в одном клиенте · две ОС · плюс расширение редактора — реальные пользователи и реальные багрепорты</p>
+  </div>
+</section>
+
+<!-- ===================== 3 · TEAM (key org chart) ===================== -->
+<section data-screen-label="03 Состав команды" data-label="Команда">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">03</span> Состав «команды»</span><span class="count">03 / 20</span></div>
+    <h2 class="title r">Ни одна роль не дублирует другую</h2>
+    <div class="area" style="flex-direction:column; justify-content:center; gap:26px">
+      <div style="position:relative; height:470px">
+        <svg viewBox="0 0 1620 470" style="position:absolute; inset:0; width:100%; height:100%">
+          <path class="wire" d="M340 71 H540" /><path class="flow" style="stroke:var(--c-lead)" d="M340 71 H540" />
+          <path class="wire" d="M720 113 V190" /><path class="flow" style="stroke:var(--c-cc)" d="M720 113 V190" />
+          <path class="wire" d="M720 273 V312 M270 312 H1110 M270 312 V350 M690 312 V350 M1110 312 V350" />
+          <path class="flow" style="stroke:var(--c-sonnet)" d="M720 273 V312 H270 V350" />
+          <path class="flow" style="stroke:var(--c-sonnet)" d="M720 312 H690 V350" />
+          <path class="flow" style="stroke:var(--c-sonnet)" d="M720 312 H1110 V350" />
+          <path class="wire" style="stroke-dasharray:6 8" d="M900 71 H1240" />
+        </svg>
+        <div class="nd owner r sm" style="--i:1; position:absolute; left:40px; top:30px; width:300px"><span class="nt" style="white-space:nowrap">Владелец продукта</span><span class="ns">принимает решения</span></div>
+        <div class="nd lead r sm" style="--i:2; position:absolute; left:540px; top:30px; width:360px"><span class="nt">Тех-лид</span><span class="ns" style="white-space:nowrap">Opus · планирование + verify</span></div>
+        <div class="nd cc r sm" style="--i:3; position:absolute; left:540px; top:190px; width:360px"><span class="nt" style="white-space:nowrap">Claude Code — оркестратор</span><span class="ns">Opus · ведёт конвейер</span></div>
+        <div class="nd sonnet r sm flo" style="--i:4; position:absolute; left:120px; top:350px; width:300px"><span class="nt">Sonnet ×N</span><span class="ns" style="white-space:nowrap">субагенты · руки</span></div>
+        <div class="nd sonnet r sm flo" style="--i:5; position:absolute; left:540px; top:350px; width:300px"><span class="nt">Sonnet ×N</span><span class="ns" style="white-space:nowrap">одна задача</span></div>
+        <div class="nd sonnet r sm flo" style="--i:6; position:absolute; left:960px; top:350px; width:300px"><span class="nt">Sonnet ×N</span><span class="ns" style="white-space:nowrap">не знают о соседях</span></div>
+        <div class="nd ext r sm" style="--i:5; position:absolute; left:1240px; top:20px; width:340px"><span class="nt" style="white-space:nowrap">Внешние агенты</span><span class="ns" style="white-space:nowrap">Kimi · GLM · на подряде</span></div>
+        <div class="nd owner r sm" style="--i:6; position:absolute; left:1240px; top:180px; width:340px"><span class="nt" style="white-space:nowrap">Живой контрибьютор</span><span class="ns" style="white-space:nowrap">unit-тесты через PR</span></div>
+      </div>
+      <p class="note r" style="--i:6">Владелец решает · тех-лид планирует и проверяет · оркестратор ведёт конвейер · Sonnet-субагенты работают руками, каждый в своей задаче и не зная о соседях</p>
+      <div class="legend r" style="--i:6; justify-content:center">
+        <span class="lg owner"><i></i>владелец</span><span class="lg lead"><i></i>тех-лид (Opus)</span><span class="lg cc"><i></i>оркестратор (Opus)</span><span class="lg sonnet"><i></i>Sonnet</span><span class="lg art"><i></i>артефакты</span><span class="lg gate"><i></i>гейты</span><span class="lg ext"><i></i>внешние</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 4 · PRINCIPLE #1 ===================== -->
+<section data-screen-label="04 Принцип №1" data-label="Разделение">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">04</span> Принцип №1</span><span class="count">04 / 20</span></div>
+    <h2 class="title r">Решать · планировать · делать · проверять</h2>
+    <p class="sub r" style="--i:1">Когда агент и решает, и делает, и сам себя проверяет — получается красиво написанный неработающий код.</p>
+    <div class="area" style="flex-direction:column; justify-content:center; gap:30px">
+      <div class="four">
+        <div class="nd owner r flo" style="--i:1"><span class="nt">Решать</span><span class="ns">владелец · только он</span></div>
+        <div class="nd lead r flo" style="--i:2"><span class="nt">Планировать</span><span class="ns">тех-лид · контракты</span></div>
+        <div class="nd cc r flo" style="--i:3"><span class="nt">Делать</span><span class="ns">оркестратор + Sonnet</span></div>
+        <div class="nd lead r flo" style="--i:4"><span class="nt">Проверять</span><span class="ns">тех-лид · факт</span></div>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px; justify-content:center; flex-wrap:wrap">
+        <span class="chip mono r" style="--i:2">решение</span>
+        <div class="rail r" style="--i:2; width:70px"></div><div class="ah r" style="--i:2"></div>
+        <span class="chip mono r" style="--i:3">бриф</span>
+        <div class="rail r" style="--i:3; width:70px"></div><div class="ah r" style="--i:3"></div>
+        <span class="chip mono r" style="--i:4">task-файл</span>
+        <div class="rail r" style="--i:4; width:70px"></div><div class="ah r" style="--i:4"></div>
+        <span class="chip mono r" style="--i:5">диф</span>
+        <div class="rail r" style="--i:5; width:70px"></div><div class="ah r" style="--i:5"></div>
+        <span class="chip mono r" style="--i:6">отчёт</span>
+        <div class="rail r" style="--i:6; width:70px"></div><div class="ah r" style="--i:6"></div>
+        <span class="chip mono r" style="--i:7" style="color:var(--c-art)">verify ✓</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 5 · EPIC LIFECYCLE (main pipeline) ===================== -->
+<section data-screen-label="05 Жизненный цикл эпика" data-label="Конвейер">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">05</span> Жизненный цикл эпика</span><span class="count">05 / 20</span></div>
+    <h2 class="title r">Главный конвейер: от идеи до FINAL</h2>
+    <p class="sub r" style="--i:1">Всё, что левее FINAL, может идти автономно — но два шлагбаума <b style="color:var(--c-gate)">неубираемы</b>.</p>
+    <div class="area" style="flex-direction:column; justify-content:center; gap:34px">
+      <div class="pipe" style="position:relative">
+        <div class="ticket">эпик →</div>
+        <div class="station r" style="--i:1"><div class="box art"><span class="st">Идея</span><span class="sc">фидбек</span></div></div>
+        <div class="station r" style="--i:2"><div class="box cc"><span class="st">Разведка</span><span class="sc">swarm</span></div></div>
+        <div class="station r" style="--i:3"><div class="box owner"><span class="st">Бриф</span><span class="sc">решения D1..DN</span></div></div>
+        <div class="station r" style="--i:4"><div class="box lead"><span class="st">fitch-контракт</span><span class="sc">5 ролей</span></div></div>
+        <div class="station r gate-bar swell" style="--i:5"><div class="box gate"><span class="st">Аудит пакета</span><span class="sc">7 линз</span></div></div>
+        <div class="station r" style="--i:6"><div class="box sonnet"><span class="st">Волны</span><span class="sc">исполнение</span></div></div>
+        <div class="station r" style="--i:7"><div class="box cc"><span class="st">Close</span><span class="sc">сборка + прогоны</span></div></div>
+        <div class="station r gate-bar swell" style="--i:8"><div class="box gate"><span class="st">Человек-гейт</span><span class="sc">решение</span></div></div>
+        <div class="station r" style="--i:9"><div class="box art"><span class="st">FINAL</span><span class="sc">merge · tag · push</span></div></div>
+      </div>
+      <!-- conveyor belt -->
+      <div style="position:relative; display:flex; align-items:center; gap:0; padding:0 30px">
+        <div class="rail r" style="--i:3; flex:1; height:6px; --flow:var(--c-art)"></div>
+        <div class="ah r" style="--i:9"></div>
+      </div>
+      <div class="legend r" style="--i:9; justify-content:center">
+        <span class="lg gate"><i></i>неубираемые шлагбаумы: аудит + человек-гейт</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 6 · QUESTIONS TO OWNER ===================== -->
+<section data-screen-label="06 Вопросы владельцу" data-label="Вопросы">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">06</span> Вопросы владельцу</span><span class="count">06 / 20</span></div>
+    <h2 class="title r">По одному вопросу — и просто</h2>
+    <p class="sub r" style="--i:1">Развилки не сваливаются пачкой. Один вопрос = одна карточка «что сейчас → что предлагаю → варианты с ценой». Ответ фиксируется как решение и становится законом.</p>
+    <div class="area" style="align-items:center; justify-content:center; gap:60px">
+      <div class="panel r" style="--i:2; width:640px; padding:30px 32px">
+        <div style="font-family:var(--mono); font-size:16px; color:var(--c-lead); margin-bottom:16px">тех-лид спрашивает</div>
+        <div style="font-size:24px; font-weight:700; color:#fff; margin-bottom:8px">Формат экспорта коллекций?</div>
+        <div style="font-size:18px; color:var(--mut); margin-bottom:22px">Сейчас: свой JSON. Предлагаю: паритет с внешним форматом.</div>
+        <div style="display:flex; flex-direction:column; gap:12px">
+          <div class="chip" style="width:100%; box-sizing:border-box">A · свой JSON — дёшево, но замок</div>
+          <div class="chip" style="width:100%; box-sizing:border-box; border-color:color-mix(in oklab,var(--c-owner) 50%,transparent); color:#fff; background:color-mix(in oklab,var(--c-owner) 14%,transparent)">B · внешний формат — +2 дня, совместимость ✓</div>
+          <div class="chip" style="width:100%; box-sizing:border-box">C · оба — дорого в поддержке</div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:14px">
+        <div class="rail r" style="--i:3; width:120px; --flow:var(--c-owner)"></div>
+        <div class="ah r" style="--i:3; --flow:var(--c-owner)"></div>
+        <div style="font-family:var(--mono); font-size:14px; color:var(--mut-2)">ответ → бриф</div>
+      </div>
+      <div class="file r" style="--i:4; width:420px">
+        <div class="fh"><span class="dots"><i></i><i></i><i></i></span>brief.md</div>
+        <div class="body">
+          <div class="cmt"># Решения владельца</div>
+          <div><span class="tokb">D1</span> · импорт по запросу</div>
+          <div style="position:relative; display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; background:color-mix(in oklab,var(--c-owner) 16%,transparent); border:1px solid color-mix(in oklab,var(--c-owner) 45%,transparent)"><span class="tokb">D2</span> <span style="flex:1">· внешний формат экспорта</span> <span style="font-size:13px; color:var(--c-owner); white-space:nowrap">● закон</span></div>
+          <div class="cmt" style="margin-top:8px">→ действует для всех агентов</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 7 · TASK FILE ANATOMY ===================== -->
+<section data-screen-label="07 Анатомия task-файла" data-label="task-файл">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">07</span> Артефакты как код</span><span class="count">07 / 20</span></div>
+    <h2 class="title r">Анатомия task-файла = контракт для одного</h2>
+    <div class="area" style="align-items:center; justify-content:center; gap:56px">
+      <div class="file r" style="--i:1; width:820px">
+        <div class="fh"><span class="dots"><i></i><i></i><i></i></span>tasks/epic-wsdl/task-03-recursive-parse.md · model: sonnet</div>
+        <div class="body" style="font-size:18px; line-height:1.85">
+          <div class="cmt">## Факты</div>
+          <div>парсер WSDL — <span class="tokk">src/wsdl/parse.ts:118</span></div>
+          <div class="cmt" style="margin-top:10px">## Шаги</div>
+          <div>1. добавить рекурсию по import — <span class="tokk">parse.ts:140</span></div>
+          <div>2. защитный лимит глубины = 32</div>
+          <div class="cmt" style="margin-top:10px">## Что НЕ делать</div>
+          <div><span class="tokr">✗ не трогать</span> сетевой слой · <span class="tokr">✗ нет</span> «примерно / если возможно»</div>
+          <div class="cmt" style="margin-top:10px">## DoD</div>
+          <div id="dodline" style="padding:8px 10px; border-radius:8px; border:1px solid color-mix(in oklab,var(--c-art) 45%,transparent); background:color-mix(in oklab,var(--c-art) 14%,transparent)"><span class="tokk">npm run test:wsdl</span> → <span style="color:var(--c-art)">PASS ✓ (corpus 12/12)</span></div>
+        </div>
+      </div>
+      <ul class="pts r" style="--i:2; max-width:460px">
+        <li><b>Факты → шаги с файл:строка</b> — никакой воды</li>
+        <li><b>«Что НЕ делать»</b> — границы важнее задач</li>
+        <li><b>DoD одной machine-readable командой</b></li>
+        <li>Запрещены «примерно / если возможно»</li>
+        <li>Модель исполнителя указана <b>явно</b></li>
+      </ul>
+    </div>
+    <p class="note r" style="--i:3">Такой файл может выполнить любой агент — и это проверялось буквально: границы и DoD важнее описания задачи</p>
+  </div>
+</section>
+
+<!-- ===================== 8 · RULE R7 ===================== -->
+<section data-screen-label="08 Правило R7" data-label="R7">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">08</span> Правило R7</span><span class="count">08 / 20</span></div>
+    <h2 class="title r">Кто думает — старшая модель. Кто делает — Sonnet</h2>
+    <p class="sub r" style="--i:1">Предсказуемость дороже пиковой мощности. Родилось из инцидента, когда дорогие модели случайно клонировались в субагентов.</p>
+    <div class="area" style="align-items:center; justify-content:center; gap:70px">
+      <div style="position:relative; width:780px; height:500px; flex:none">
+        <svg viewBox="0 0 780 500" style="position:absolute;inset:0;width:100%;height:100%">
+          <path class="wire" d="M390 96 V132 M152 132 H627 M152 132 V170 M627 132 V170 M152 258 V300 M91 300 H689 M91 300 V342 M290 300 V342 M490 300 V342 M689 300 V342" />
+          <path class="flow" style="stroke:var(--c-cc)" d="M390 96 V132 H152 V170" />
+          <path class="flow" style="stroke:var(--c-sonnet)" d="M152 258 V300 H91 V342" />
+          <path class="flow" style="stroke:var(--c-sonnet)" d="M152 300 H290 V342" />
+          <path class="flow" style="stroke:var(--c-sonnet)" d="M152 300 H490 V342" />
+          <path class="flow" style="stroke:var(--c-sonnet)" d="M152 300 H689 V342" />
+        </svg>
+        <div class="nd lead r sm" style="--i:2; position:absolute; left:280px; top:10px; width:220px; text-align:center"><span class="nt">Тех-лид</span><span class="ns">Opus · думает</span></div>
+        <div class="nd cc r sm" style="--i:3; position:absolute; left:20px; top:170px; width:265px"><span class="nt" style="white-space:nowrap">Оркестратор</span><span class="ns">Opus · ведёт конвейер</span></div>
+        <div class="nd cc r sm" style="--i:3; position:absolute; left:495px; top:170px; width:265px; opacity:.45"><span class="nt" style="white-space:nowrap">думающие ×2</span><span class="ns">только вершина</span></div>
+        <div style="position:absolute; left:0; top:342px; right:0; display:flex; gap:16px; justify-content:center">
+          <div class="nd sonnet r mini" style="--i:4; flex:1; text-align:center"><span class="nt">Sonnet</span></div>
+          <div class="nd sonnet r mini" style="--i:5; flex:1; text-align:center"><span class="nt">Sonnet</span></div>
+          <div class="nd sonnet r mini" style="--i:6; flex:1; text-align:center"><span class="nt">Sonnet</span></div>
+          <div class="nd sonnet r mini" style="--i:7; flex:1; text-align:center"><span class="nt">×N</span></div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:22px; max-width:620px; flex:1">
+        <div class="file r" style="--i:4">
+          <div class="fh"><span class="dots"><i></i><i></i><i></i></span>wave-report.md</div>
+          <div class="body"><div class="gate-bar" style="padding:6px 8px; border-radius:8px"><span class="tokk">субагенты: sonnet ×4</span> <span style="color:var(--c-art)">✓</span></div><div class="cmt" style="margin-top:8px">нет этой строки → красный гейт, стоп</div></div>
+        </div>
+        <div class="tag red r" style="--i:6">детектор «не той модели» → конвейер стоит</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 9 · WAVES & FILE OWNERSHIP ===================== -->
+<section data-screen-label="09 Волны и владение файлами" data-label="Волны">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">09</span> Волны и владение файлами</span><span class="count">09 / 20</span></div>
+    <h2 class="title r">Драться не за что — merge-конфликтов нет</h2>
+    <p class="sub r" style="--i:1">Внутри волны задачи параллельны и не пересекаются по файлам. Горячие файлы — одна задача за волну.</p>
+    <div class="area" style="align-items:center; justify-content:center; gap:56px">
+      <div style="display:grid; grid-template-columns:repeat(3,212px); grid-auto-rows:120px; gap:18px">
+        <div class="tile r" style="--i:1">api.ts</div>
+        <div class="tile r w1" style="--i:1">parse.ts</div>
+        <div class="tile r w1" style="--i:2">grpc.ts</div>
+        <div class="tile r w2" style="--i:2">ui/List.tsx</div>
+        <div class="tile r hot" style="--i:3">App.tsx<span>горячий</span></div>
+        <div class="tile r w2" style="--i:3">store.ts</div>
+        <div class="tile r w1" style="--i:4">wsdl.ts</div>
+        <div class="tile r w2" style="--i:4">theme.ts</div>
+        <div class="tile r own" style="--i:5">tests/*<span>оркестратор</span></div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px; max-width:480px">
+        <div class="legend"><span class="lg r" style="--i:2"><i style="background:var(--c-sonnet)"></i>волна 1</span><span class="lg r" style="--i:3"><i style="background:var(--c-owner)"></i>волна 2</span><span class="lg gate r" style="--i:4"><i></i>коллизия → красное</span></div>
+        <ul class="pts r" style="--i:4">
+          <li>Два агента на одну плитку — <b style="color:var(--c-gate)">плитка краснеет</b></li>
+          <li>Общие тестовые файлы — у оркестратора, не у субагентов</li>
+          <li>Конфликты исчезли <b>как класс</b></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <style>
+  .tile{border-radius:14px; border:1px solid var(--line); background:var(--panel); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; font-family:var(--mono); font-size:22px; color:var(--mut)}
+  .tile span{font-size:15px; color:var(--mut-2)}
+  .tile.w1{border-color:color-mix(in oklab,var(--c-sonnet) 55%,transparent); background:color-mix(in oklab,var(--c-sonnet) 12%,var(--panel)); color:#fff}
+  .tile.w2{border-color:color-mix(in oklab,var(--c-owner) 55%,transparent); background:color-mix(in oklab,var(--c-owner) 12%,var(--panel)); color:#fff}
+  .tile.own{border-color:color-mix(in oklab,var(--c-cc) 55%,transparent); background:color-mix(in oklab,var(--c-cc) 12%,var(--panel)); color:#fff}
+  .tile.hot{border-color:var(--c-gate); background:color-mix(in oklab,var(--c-gate) 16%,var(--panel)); color:#fff}
+  section[data-deck-active] .tile.hot{animation:hotpulse 1.6s ease-in-out infinite; animation-delay:1.2s}
+  @keyframes hotpulse{0%,100%{box-shadow:0 0 0 0 color-mix(in oklab,var(--c-gate) 40%,transparent)}50%{box-shadow:0 0 0 7px color-mix(in oklab,var(--c-gate) 22%,transparent)}}
+  section[data-deck-active] .tile.w1{animation:blinkY 3.2s ease-in-out infinite; animation-delay:calc(var(--i,0)*380ms + .9s)}
+  @keyframes blinkY{0%,100%{box-shadow:0 0 0 0 rgba(255,210,74,0)}50%{box-shadow:0 0 26px 1px rgba(255,210,74,.45)}}
+  section[data-deck-active] .tile.w2{animation:blinkB 3.2s ease-in-out infinite; animation-delay:calc(var(--i,0)*380ms + 1.6s)}
+  @keyframes blinkB{0%,100%{box-shadow:0 0 0 0 rgba(74,163,255,0)}50%{box-shadow:0 0 26px 1px rgba(74,163,255,.45)}}
+  section[data-deck-active] .tile.own{animation:blinkC 3.6s ease-in-out infinite; animation-delay:2.2s}
+  @keyframes blinkC{0%,100%{box-shadow:0 0 0 0 rgba(255,154,82,0)}50%{box-shadow:0 0 26px 1px rgba(255,154,82,.45)}}
+  </style>
+</section>
+
+<!-- ===================== 10 · DoD GREEN ===================== -->
+<section data-screen-label="10 DoD = зелёный прогон" data-label="DoD">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">10</span> Definition of Done</span><span class="count">10 / 20</span></div>
+    <h2 class="title r">«Код написан» — не результат. Результат — тест прошёл</h2>
+    <p class="sub r" style="--i:1">Для багфиксов обязательна RED-фаза: сначала тест, доказанно падающий на старом коде. И <b class="mono">WRITTEN ≠ CONSUMED</b> — проверяем computed-значение, а не факт записи.</p>
+    <div class="area" style="align-items:center; justify-content:center; gap:24px">
+      <div class="stepcard r red" style="--i:1"><div class="sn">1 · RED</div><div class="st">Тест падает на старом коде</div><div class="log">✗ FAIL — expected 42, got undefined</div></div>
+      <div class="ah r" style="--i:2; --flow:var(--mut)"></div>
+      <div class="stepcard r amber" style="--i:2"><div class="sn">2 · FIX</div><div class="st">Точечная правка по факту</div><div class="log">patch src/wsdl/parse.ts</div></div>
+      <div class="ah r" style="--i:3"></div>
+      <div class="stepcard r grn" style="--i:3"><div class="sn">3 · GREEN</div><div class="st">Тот же тест зелёный</div><div class="log">✓ PASS — 12/12 corpus</div></div>
+    </div>
+  </div>
+  <style>
+  .stepcard{width:400px; border-radius:16px; padding:26px 28px; background:var(--panel); border:1px solid var(--line)}
+  .stepcard .sn{font-family:var(--mono); font-size:15px; letter-spacing:.1em; margin-bottom:12px}
+  .stepcard .st{font-size:26px; font-weight:700; color:#fff; margin-bottom:16px; line-height:1.15}
+  .stepcard .log{font-family:var(--mono); font-size:16px; padding:10px 14px; border-radius:9px; background:rgba(0,0,0,.3)}
+  .stepcard.red{border-color:color-mix(in oklab,var(--c-gate) 45%,transparent)} .stepcard.red .sn{color:var(--c-gate)} .stepcard.red .log{color:var(--c-gate)}
+  .stepcard.amber{border-color:color-mix(in oklab,var(--c-cc) 45%,transparent)} .stepcard.amber .sn{color:var(--c-cc)} .stepcard.amber .log{color:var(--c-cc)}
+  .stepcard.grn{border-color:color-mix(in oklab,var(--c-art) 45%,transparent)} .stepcard.grn .sn{color:var(--c-art)} .stepcard.grn .log{color:var(--c-art)}
+  section[data-deck-active] .stepcard.grn{animation:grnglow 2s ease .9s both}
+  @keyframes grnglow{from{box-shadow:none}to{box-shadow:0 0 40px color-mix(in oklab,var(--c-art) 30%,transparent)}}
+  </style>
+</section>
+
+<!-- ===================== 11 · VERIFY CULTURE ===================== -->
+<section data-screen-label="11 Verify-культура" data-label="Verify">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">11</span> Доверяй, но проверяй</span><span class="count">11 / 20</span></div>
+    <h2 class="title r">Отчёту агента не верят на слово</h2>
+    <p class="sub r" style="--i:1">Тех-лид читает git-объекты руками, сверяет timestamps инсталляторов с код-коммитом, логи парсит скриптом — а не глазами.</p>
+    <div class="area" style="align-items:center; justify-content:center; gap:40px">
+      <div class="panel r" style="--i:2; width:340px; padding:28px; text-align:center">
+        <div style="font-family:var(--mono); font-size:15px; color:var(--mut); margin-bottom:12px">отчёт агента</div>
+        <div style="font-size:32px; font-weight:800; color:var(--c-art)">DONE ✓</div>
+        <div style="font-family:var(--mono); font-size:14px; color:var(--mut-2); margin-top:10px">«инсталляторы пересобраны»</div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:10px; width:360px">
+        <div class="mag r" style="--i:2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></div>
+        <div class="chips" style="justify-content:center">
+          <span class="chip r" style="--i:3">refs</span><span class="chip r" style="--i:4">zlib-распаковка</span><span class="chip r" style="--i:5">поля коммита</span>
+        </div>
+        <div class="rail r" style="--i:3; width:100%; margin-top:6px; --flow:var(--c-lead)"></div>
+        <div style="font-family:var(--mono); font-size:14px; color:var(--mut-2)">annotated-тег → коммит · parents</div>
+      </div>
+      <div class="panel r" style="--i:6; width:360px; padding:28px; border-color:color-mix(in oklab,var(--c-gate) 45%,transparent)">
+        <div style="font-family:var(--mono); font-size:15px; color:var(--mut); margin-bottom:12px">факт на диске</div>
+        <div style="font-family:var(--mono); font-size:16px; color:#dfe8f1; line-height:1.7">
+          <div><span class="tokr">timestamp</span> старше код-коммита</div>
+          <div><span class="tokr">tag</span> → не тот коммит</div>
+          <div style="color:var(--c-gate); margin-top:8px; font-weight:600">↯ поймано</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 12 · MEMORY ===================== -->
+<section data-screen-label="12 Память проекта" data-label="Память">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">12</span> Память проекта</span><span class="count">12 / 20</span></div>
+    <h2 class="title r">Контекст-окно — расходник. Три слоя памяти</h2>
+    <p class="sub r" style="--i:1">Знания живут не в чатах. Всё важное обязано пережить перезапуск сессии.</p>
+    <div class="area" style="align-items:center; justify-content:center; gap:30px">
+      <div class="three" style="width:100%; max-width:1440px">
+        <div class="nd art r flo" style="--i:1"><span class="nt">kb · база знаний</span><span class="ns" style="margin-top:6px">большие доки → SQLite + полнотекст. На диске тизеры, тело — по запросу.</span></div>
+        <div class="nd lead r flo" style="--i:2"><span class="nt">handoff-файл</span><span class="ns" style="margin-top:6px">переносит состояние тех-лида между сессиями.</span></div>
+        <div class="nd owner r flo" style="--i:3"><span class="nt">memory · правила</span><span class="ns" style="margin-top:6px">выученные правила — в память ассистента.</span></div>
+      </div>
+      <div style="display:flex; align-items:center; gap:20px; margin-top:14px">
+        <div class="sess r off" style="--i:4">сессия N<span>гаснет</span></div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:8px">
+          <div class="rail r" style="--i:4; width:150px; --flow:var(--c-art)"></div>
+          <span class="mono" style="font-size:14px; color:var(--mut-2)">чекпоинт остаётся</span>
+        </div>
+        <div class="file r" style="--i:5; width:170px"><div class="fh" style="font-size:14px; padding:10px 14px"><span class="dots"><i></i><i></i></span>handoff</div></div>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:8px">
+          <div class="rail r" style="--i:5; width:150px; --flow:var(--c-art)"></div>
+          <span class="mono" style="font-size:14px; color:var(--mut-2)">читает первым</span>
+        </div>
+        <div class="sess r on" style="--i:6">сессия N+1<span>зажигается</span></div>
+      </div>
+    </div>
+  </div>
+  <style>
+  .sess{width:150px; height:78px; border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; font-weight:700; color:#fff; font-size:19px; border:1px solid var(--line); background:var(--panel)}
+  .sess span{font-family:var(--mono); font-size:12px; font-weight:500}
+  .sess.off{opacity:.45} .sess.off span{color:var(--c-gate)}
+  .sess.on{border-color:color-mix(in oklab,var(--c-art) 50%,transparent); box-shadow:0 0 26px color-mix(in oklab,var(--c-art) 26%,transparent)} .sess.on span{color:var(--c-art)}
+  </style>
+</section>
+
+<!-- ===================== 13 · SKILLS ===================== -->
+<section data-screen-label="13 Skills" data-label="Skills">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">13</span> Skills</span><span class="count">13 / 20</span></div>
+    <h2 class="title r">Один канон правил — для всех агентов</h2>
+    <p class="sub r" style="--i:1">Процессные и доменные правила лежат в git-репо. В скиллах — только стабильное; летучее делегировано в код и базу знаний.</p>
+    <div class="area" style="align-items:center; justify-content:center; gap:80px">
+      <div style="position:relative; width:560px; height:420px">
+        <svg viewBox="0 0 560 420" style="position:absolute;inset:0;width:100%;height:100%">
+          <path class="wire" d="M280 210 L110 90 M280 210 L110 330 M280 210 L470 70 M280 210 L470 210 M280 210 L470 350" />
+          <path class="flow" style="stroke:var(--c-art)" d="M280 210 L110 90" />
+          <path class="flow" style="stroke:var(--c-art)" d="M280 210 L470 70" />
+          <path class="flow" style="stroke:var(--c-art)" d="M280 210 L470 350" />
+        </svg>
+        <div class="nd art r" style="--i:1; position:absolute; left:200px; top:176px; width:160px; text-align:center"><span class="nt">skills/</span><span class="ns">в git-репо</span></div>
+        <div class="reader r lead" style="--i:2; left:20px; top:64px">тех-лид</div>
+        <div class="reader r cc" style="--i:3; left:20px; top:304px">оркестратор</div>
+        <div class="reader r sonnet" style="--i:4; left:400px; top:44px">Sonnet</div>
+        <div class="reader r ext" style="--i:5; left:400px; top:184px">внешние</div>
+        <div class="reader r owner" style="--i:6; left:400px; top:324px; width:185px; height:52px">контрибьютор</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:20px">
+        <div style="font-family:var(--mono); font-size:16px; color:var(--mut)">launch-документы: было / стало</div>
+        <div style="display:flex; align-items:flex-end; gap:26px; height:200px">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px"><div class="bar r" style="--i:2; height:180px; background:color-mix(in oklab,var(--c-gate) 30%,var(--panel)); border-color:color-mix(in oklab,var(--c-gate) 50%,transparent)"></div><span class="mono" style="color:var(--mut)">было</span></div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:10px"><div class="bar r" style="--i:4; height:92px; background:color-mix(in oklab,var(--c-art) 30%,var(--panel)); border-color:color-mix(in oklab,var(--c-art) 50%,transparent)"></div><span class="mono" style="color:var(--c-art)">−50%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <style>
+  .reader{box-sizing:border-box; position:absolute; width:150px; padding:12px 14px; border-radius:11px; text-align:center; font-weight:700; color:#fff; font-size:20px;
+    background:color-mix(in oklab,var(--c) 14%,var(--panel)); border:1px solid color-mix(in oklab,var(--c) 45%,transparent); --c:var(--c-ext)}
+  .reader.lead{--c:var(--c-lead)} .reader.cc{--c:var(--c-cc)} .reader.sonnet{--c:var(--c-sonnet)} .reader.ext{--c:var(--c-ext)} .reader.owner{--c:var(--c-owner)}
+  .bar{width:80px; border-radius:10px 10px 0 0; border:1px solid}
+  </style>
+</section>
+
+<!-- ===================== 14 · INFRASTRUCTURE ===================== -->
+<section data-screen-label="14 Инфраструктура" data-label="Стенд">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">14</span> Инфраструктура</span><span class="count">14 / 20</span></div>
+    <h2 class="title r">Стенд и данные тестов: как текут данные</h2>
+    <p class="sub r" style="--i:1">Агентам дают не ssh, а инструменты с ограничениями — деструктивные команды заблокированы на уровне канала. Стенд: <span class="mono">192.168.x.x</span></p>
+    <div class="area" style="align-items:center; justify-content:center; gap:0">
+      <div style="display:flex; align-items:center; gap:0; width:100%; max-width:1560px">
+        <div class="nd owner r" style="--i:1; width:230px; text-align:center"><span class="nt">Ноутбук владельца</span><span class="ns">Pe4King · CC</span></div>
+        <div class="flowseg r" style="--i:2"><span class="mono lbl">MCP</span><div class="rail" style="width:100%; --flow:var(--c-owner)"></div><div class="rail" style="width:100%; --flow:var(--c-art); margin-top:8px"></div></div>
+        <div class="panel r" style="--i:3; width:360px; padding:22px; text-align:center">
+          <div style="font-family:var(--mono); font-size:15px; color:var(--mut); margin-bottom:14px">домашний сервер</div>
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <span class="chip" style="justify-content:center">мок-ферма · HTTP / gRPC / SOAP · 24/7</span>
+            <span class="chip" style="justify-content:center">Docker-сборки · Win + 2× Linux</span>
+            <span class="chip" style="justify-content:center; color:var(--c-gate)">glibc ≤ 2.32 (потолок ОС заказчика)</span>
+          </div>
+        </div>
+        <div class="flowseg r" style="--i:4"><span class="mono lbl">AppImage</span><div class="rail" style="width:100%; --flow:var(--c-art)"></div></div>
+        <div class="nd art r" style="--i:5; width:220px; text-align:center"><span class="nt">Отчёт-таблица</span><span class="ns">62 E2E-спека</span></div>
+      </div>
+    </div>
+  </div>
+  <style>
+  .flowseg{flex:1; min-width:120px; display:flex; flex-direction:column; align-items:center; gap:8px; padding:0 18px}
+  .flowseg .lbl{font-size:14px; color:var(--mut-2)}
+  </style>
+</section>
+
+<!-- ===================== 15 · KIMI ===================== -->
+<section data-screen-label="15 Эксперимент Kimi" data-label="Kimi">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">15</span> Эксперимент №1 · Kimi</span><span class="count">15 / 20</span></div>
+    <h2 class="title r">Урок ценой ребута: неперегнанный тест опасен физически</h2>
+    <p class="sub r" style="--i:1">Две фазы портирования закрыл достойно. На третьей тест содержал бесконечный насос данных — в RED-фазе ограничителя ещё нет по определению.</p>
+    <div class="area" style="align-items:center; justify-content:center; gap:70px">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:16px">
+        <div class="gauge r" style="--i:2"><div class="fill bad"></div><div class="cap">16 ГБ RAM</div></div>
+        <div class="tag red r" style="--i:3">буферы за лимитом кучи → жёсткий ребут (Kernel-Power)</div>
+      </div>
+      <div style="font-size:44px; color:var(--mut-2)" class="r" style="--i:3">→</div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:16px">
+        <div class="gauge r" style="--i:4"><div class="fill good"></div><div class="cap">LIMIT 32MB</div></div>
+        <div class="tag grn r" style="--i:5">любой генератор в тестах — только с жёстким bound</div>
+      </div>
+    </div>
+  </div>
+  <style>
+  .gauge{position:relative; width:150px; height:300px; border-radius:18px; border:2px solid var(--line); background:var(--panel-2); overflow:hidden; display:flex; align-items:flex-end}
+  .gauge .fill{width:100%; }
+  .gauge .cap{position:absolute; top:12px; left:0; right:0; text-align:center; font-family:var(--mono); font-size:14px; color:var(--mut)}
+  .gauge .fill.bad{height:0; background:linear-gradient(0deg,var(--c-gate),color-mix(in oklab,var(--c-gate) 40%,transparent))}
+  section[data-deck-active] .gauge .fill.bad{animation:fillbad 2.4s cubic-bezier(.7,.02,.9,.5) 1s forwards}
+  @keyframes fillbad{to{height:100%}}
+  .gauge .fill.good{height:0; background:linear-gradient(0deg,var(--c-art),color-mix(in oklab,var(--c-art) 40%,transparent))}
+  section[data-deck-active] .gauge .fill.good{animation:fillgood 1.4s ease 1.2s forwards}
+  @keyframes fillgood{to{height:34%}}
+  section[data-deck-active] .gauge:has(.bad){animation:none}
+  section[data-deck-active] .gauge .bad ~ .cap{}
+  </style>
+</section>
+
+<!-- ===================== 16 · GLM ===================== -->
+<section data-screen-label="16 Эксперимент GLM" data-label="GLM">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">16</span> Эксперимент №2 · GLM</span><span class="count">16 / 20</span></div>
+    <h2 class="title r">Лестница доверия: честный красный выше нарисованного зелёного</h2>
+    <p class="sub r" style="--i:1">Мандат расширяется шагами и пишется файлом. Новый агент не получает доверие сразу — он его <b>зарабатывает</b> на каждой ступени.</p>
+    <div class="area" style="align-items:flex-end; justify-content:center; gap:0; padding-bottom:20px">
+      <div class="stair r" style="--i:1; height:170px">
+        <div class="sh">1 · read-only аудит</div>
+        <div class="sd">нашёл реальные процессные дыры</div>
+        <div class="key"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.4"/><path d="M10.4 10.4L18 18M15 18l2-2M18 18l1.6-1.6"/></svg></div>
+      </div>
+      <div class="stair r" style="--i:2; height:280px">
+        <div class="sh">2 · housekeeping-эпик</div>
+        <div class="sd">закрытая ветка · ноль нарушений контура · честно задекларированный блокер среды</div>
+        <div class="key"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.4"/><path d="M10.4 10.4L18 18M15 18l2-2M18 18l1.6-1.6"/></svg><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.4"/><path d="M10.4 10.4L18 18M15 18l2-2M18 18l1.6-1.6"/></svg></div>
+      </div>
+      <div class="stair r" style="--i:3; height:400px">
+        <div class="sh">3 · Linux-релиз со стендом</div>
+        <div class="sd">расширение мандата · те же правила и гейты, что у всех</div>
+        <div class="key"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.4"/><path d="M10.4 10.4L18 18M15 18l2-2M18 18l1.6-1.6"/></svg><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.4"/><path d="M10.4 10.4L18 18M15 18l2-2M18 18l1.6-1.6"/></svg><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3.4"/><path d="M10.4 10.4L18 18M15 18l2-2M18 18l1.6-1.6"/></svg></div>
+      </div>
+    </div>
+  </div>
+  <style>
+  .stair{width:420px; margin:0 -1px; border:1px solid var(--line); border-bottom:none; border-radius:14px 14px 0 0; padding:22px 26px; position:relative;
+    background:linear-gradient(180deg, color-mix(in oklab,var(--c-art) 10%,var(--panel)), var(--panel));
+    box-shadow:inset 3px 0 0 var(--c-gate)}
+  .stair .sh{font-size:24px; font-weight:800; color:#fff; margin-bottom:8px}
+  .stair .sd{font-size:17px; color:var(--mut); line-height:1.35; max-width:340px}
+  .stair .key{position:absolute; top:16px; right:22px; display:flex; gap:3px}
+  .stair .key svg{width:19px; height:19px; fill:none; stroke:var(--c-art); stroke-width:2; stroke-linecap:round; opacity:0; transform:scale(.3) rotate(-25deg)}
+  /* climbing glow: each step lights up in turn */
+  section[data-deck-active] .stair{animation:climb 5.4s ease-in-out infinite; animation-delay:calc(var(--i,0)*620ms + 1.1s)}
+  @keyframes climb{0%,100%{box-shadow:inset 3px 0 0 var(--c-gate)}45%,60%{box-shadow:inset 3px 0 0 var(--c-art), 0 0 40px color-mix(in oklab,var(--c-art) 24%,transparent)}}
+  /* keys unlock one by one as the mandate widens */
+  section[data-deck-active] .stair .key svg{animation:keyin .55s cubic-bezier(.2,.8,.2,1) forwards}
+  @keyframes keyin{to{opacity:1; transform:scale(1) rotate(0)}}
+  section[data-deck-active] .stair:nth-of-type(1) .key svg:nth-child(1){animation-delay:.85s}
+  section[data-deck-active] .stair:nth-of-type(2) .key svg:nth-child(1){animation-delay:1.45s}
+  section[data-deck-active] .stair:nth-of-type(2) .key svg:nth-child(2){animation-delay:1.65s}
+  section[data-deck-active] .stair:nth-of-type(3) .key svg:nth-child(1){animation-delay:2.05s}
+  section[data-deck-active] .stair:nth-of-type(3) .key svg:nth-child(2){animation-delay:2.25s}
+  section[data-deck-active] .stair:nth-of-type(3) .key svg:nth-child(3){animation-delay:2.45s}
+  /* light sweeping up the top edge of each step */
+  .stair::after{content:""; position:absolute; left:0; right:0; top:-1px; height:2px; border-radius:2px;
+    background:linear-gradient(90deg,transparent,var(--c-art),transparent); opacity:0; transform:translateX(-100%)}
+  section[data-deck-active] .stair::after{animation:sweep 5.4s ease-in-out infinite; animation-delay:calc(var(--i,0)*620ms + 1.1s)}
+  @keyframes sweep{0%{opacity:0; transform:translateX(-100%)}35%{opacity:1}55%{opacity:1; transform:translateX(100%)}60%,100%{opacity:0; transform:translateX(100%)}}
+  @media print{.stair .key svg{opacity:1; transform:none}}
+  </style>
+</section>
+
+<!-- ===================== 17 · CONTRIBUTOR ===================== -->
+<section data-screen-label="17 Живой контрибьютор" data-label="Контрибьютор">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">17</span> Живой контрибьютор в AI-команде</span><span class="count">17 / 20</span></div>
+    <h2 class="title r">Люди и агенты в одном flow</h2>
+    <p class="sub r" style="--i:1">Тестировщик прислал PR на <b>+181 unit-тест</b>. Агент ускоряет ревью, но не подменяет приёмку.</p>
+    <div class="area" style="align-items:center; justify-content:center">
+      <div style="display:flex; align-items:center; gap:0; width:100%; max-width:1620px">
+        <div class="prn r ext" style="--i:1"><span class="nt">Форк / ветка</span><span class="ns">PR-only</span></div>
+        <div class="prlink r" style="--i:2"></div>
+        <div class="prn r sonnet" style="--i:3"><span class="nt">Агент-ревьюер</span><span class="ns">чек-лист: пересечения · bounded · контракты</span></div>
+        <div class="prlink r" style="--i:4"></div>
+        <div class="prn r lead" style="--i:5"><span class="nt">Тех-лид</span><span class="ns">финальный вердикт · человек</span></div>
+        <div class="prlink r" style="--i:6"></div>
+        <div class="prn r owner" style="--i:7"><span class="nt">Владелец</span><span class="ns">кнопка merge · человек</span></div>
+      </div>
+    </div>
+    <p class="sub r" style="--i:6; text-align:center; max-width:1400px; margin-left:auto; margin-right:auto">CONTRIBUTING.md и комментарий с пожеланиями — тоже агентом, но <b>от имени владельца</b>.</p>
+  </div>
+  <style>
+  .prn{box-sizing:border-box; flex:1; display:flex; flex-direction:column; gap:6px; padding:20px 22px; border-radius:15px; text-align:left;
+    background:color-mix(in oklab,var(--c) 12%,var(--panel)); border:1px solid color-mix(in oklab,var(--c) 42%,transparent); --c:var(--c-ext)}
+  .prn.ext{--c:var(--c-ext)} .prn.sonnet{--c:var(--c-sonnet)} .prn.lead{--c:var(--c-lead)} .prn.owner{--c:var(--c-owner)}
+  .prn .nt{font-size:22px; font-weight:700; color:#fff} .prn .ns{font-family:var(--mono); font-size:14px; color:var(--mut)}
+  .prlink{width:80px; height:4px; border-radius:99px; background:rgba(150,180,210,.14); position:relative; overflow:hidden; flex:none}
+  .prlink::after{content:""; position:absolute; inset:0; width:40%; background:linear-gradient(90deg,transparent,var(--c-owner),transparent); transform:translateX(-140%)}
+  section[data-deck-active] .prlink::after{animation:rf 1.9s linear infinite}
+  </style>
+</section>
+
+<!-- ===================== 18 · CUSTOMER ===================== -->
+<section data-screen-label="18 Работа с заказчиком" data-label="Заказчик">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">18</span> Работа с заказчиком</span><span class="count">18 / 20</span></div>
+    <h2 class="title r">От жалобы до релиза: закрываем класс, а не симптом</h2>
+    <p class="sub r" style="--i:1">«Не во всех WSDL подтягивается структура» → диагноз за минуты (генератор был one-level by design) → бриф «паритет с SoapUI» → эпик за сутки.</p>
+    <div class="area" style="align-items:center; justify-content:center; gap:40px">
+      <div class="panel r" style="--i:2; width:360px; padding:24px">
+        <div class="mono" style="font-size:15px; color:var(--mut); margin-bottom:14px">SoapUI</div>
+        <div class="tree full"><div>service</div><div class="i">├ operation A</div><div class="i2">│  ├ import X</div><div class="i2">│  └ import Y</div><div class="i">└ operation B</div></div>
+      </div>
+      <div class="panel r" style="--i:3; width:360px; padding:24px; border-color:color-mix(in oklab,var(--c-gate) 40%,transparent)">
+        <div class="mono" style="font-size:15px; color:var(--mut); margin-bottom:14px">было у нас · плоско</div>
+        <div class="tree flat"><div>service</div><div class="i">├ operation A</div><div class="i" style="color:var(--c-gate)">└ operation B</div><div class="cmt" style="margin-top:6px">import не раскрыт</div></div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px">
+        <div class="tag grn r" style="--i:4">эпик</div>
+        <div class="rail r" style="--i:4; width:100px"></div><div class="ah r" style="--i:4"></div>
+        <span class="mono" style="font-size:13px; color:var(--mut-2)">рекурсия + лимиты</span>
+      </div>
+      <div class="panel r" style="--i:5; width:360px; padding:24px; border-color:color-mix(in oklab,var(--c-art) 45%,transparent)">
+        <div class="mono" style="font-size:15px; color:var(--c-art); margin-bottom:14px">стало · паритет ✓</div>
+        <div class="tree full"><div>service</div><div class="i">├ operation A</div><div class="i2">│  ├ import X</div><div class="i2">│  └ import Y</div><div class="i">└ operation B</div><div class="cmt" style="margin-top:6px; color:var(--c-art)">+ корпус-тесты</div></div>
+      </div>
+    </div>
+  </div>
+  <style>
+  .tree{font-family:var(--mono); font-size:16px; line-height:1.7; color:#dfe8f1}
+  .tree .i{padding-left:16px; color:var(--mut)} .tree .i2{padding-left:34px; color:var(--mut)}
+  section[data-deck-active] .tree.full .i2{animation:growin .5s ease both} 
+  section[data-deck-active] .panel:nth-child(1) .tree.full .i2:nth-of-type(1){animation-delay:.6s}
+  @keyframes growin{from{opacity:0; transform:translateX(-8px)}to{opacity:1;transform:none}}
+  </style>
+</section>
+
+<!-- ===================== 19 · TOP RAKES ===================== -->
+<section data-screen-label="19 Топ граблей" data-label="Грабли">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">19</span> Топ граблей</span><span class="count">19 / 20</span></div>
+    <h2 class="title r">Выученных, а не прочитанных</h2>
+    <p class="sub r" style="--i:1">Каждый пункт стоил реального времени или железа — потому и держится.</p>
+    <div class="area" style="align-items:center">
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:22px; width:100%">
+        <div class="rake r" style="--i:1"><div class="rn">01</div><div class="rt">Доки врут</div><div class="rd">истина — в коде и git-объектах</div></div>
+        <div class="rake r" style="--i:2"><div class="rn">02</div><div class="rt">Номера строк дрейфуют</div><div class="rd">re-grep перед использованием</div></div>
+        <div class="rake r" style="--i:3"><div class="rn">03</div><div class="rt">UNUSED-by-scan ≠ DEAD</div><div class="rd">вызовы бывают строками</div></div>
+        <div class="rake r" style="--i:4"><div class="rn">04</div><div class="rt">«Сделано» ≠ прогнано</div><div class="rd">результат = зелёный тест</div></div>
+        <div class="rake r" style="--i:5"><div class="rn">05</div><div class="rt">Агент без письменного контура = хаос</div><div class="rd">границы решают</div></div>
+        <div class="rake r good swell" style="--i:6"><div class="rn">＋</div><div class="rt">И наоборот</div><div class="rd">жёсткий контур делает продуктивным даже бесплатного агента</div></div>
+      </div>
+    </div>
+    <p class="note r" style="--i:6">Ни одна из этих строк не придумана — каждая стоила реального времени или железа</p>
+  </div>
+  <style>
+  .rake{position:relative; padding:24px 26px; border-radius:16px; background:var(--panel); border:1px solid color-mix(in oklab,var(--c-gate) 30%,transparent); box-shadow:inset 3px 0 0 var(--c-gate)}
+  .rake .rn{font-family:var(--mono); font-size:15px; color:var(--c-gate); margin-bottom:10px}
+  .rake .rt{font-size:24px; font-weight:800; color:#fff; margin-bottom:8px; line-height:1.1}
+  .rake .rd{font-size:18px; color:var(--mut); line-height:1.35}
+  .rake.good{border-color:color-mix(in oklab,var(--c-art) 40%,transparent); box-shadow:inset 3px 0 0 var(--c-art)}
+  .rake.good .rn{color:var(--c-art)}
+  </style>
+</section>
+
+<!-- ===================== 20 · TAKEAWAY ===================== -->
+<section class="closing" data-screen-label="20 Итог" data-label="Итог">
+  <div class="stage">
+    <div class="top"><span class="kick"><span class="idx">20</span> Итог</span><span class="count">20 / 20</span></div>
+    <h2 class="title r">Что из этого переносимо к вам</h2>
+    <p class="sub r" style="--i:1">Ничего из показанного не требует большой компании — требует дисциплины артефактов.</p>
+    <div class="area" style="flex-direction:column; justify-content:center; gap:34px">
+      <div class="three" style="width:100%">
+        <div class="nd art r flo" style="--i:1"><span class="nt">Контракты вместо переписок</span><span class="ns">task-файл = один исполнитель</span></div>
+        <div class="nd art r flo" style="--i:2"><span class="nt">Машинно-проверяемый DoD</span><span class="ns">результат = зелёный прогон</span></div>
+        <div class="nd art r flo" style="--i:3"><span class="nt">Роли + один класс исполнителей</span><span class="ns">думает старший, делает Sonnet</span></div>
+        <div class="nd art r flo" style="--i:4"><span class="nt">Verify независимым каналом</span><span class="ns">факт на диске, не отчёт</span></div>
+        <div class="nd art r flo" style="--i:5"><span class="nt">Память вне контекста</span><span class="ns">переживает перезапуск</span></div>
+        <div class="nd art r flo" style="--i:6"><span class="nt">Лестница доверия для новых</span><span class="ns">мандат шагами</span></div>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:center; gap:20px" class="r" style="--i:7">
+        <span class="mono" style="font-size:20px; color:var(--mut)">Вопросы?</span>
+        <span class="mono" style="font-size:18px; color:var(--mut-2)">·</span>
+        <span class="mono" style="font-size:18px; color:var(--c-art)">Pe4King</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+</deck-stage>
+
+<script type="application/json" id="speaker-notes">
+[
+"Это не концепт — всё из живого проекта, цифры настоящие.",
+"Продукт с реальными пользователями и реальными багрепортами — дальше весь флоу показан на них.",
+"Ни одна роль не дублирует другую — это главный источник скорости.",
+"Когда агент и решает, и делает, и сам себя проверяет — получается красиво написанный неработающий код.",
+"Всё, что левее FINAL, может идти полностью автономно — но два шлагбаума неубираемы.",
+"Реальный пример: 8 вопросов за вечер закрыли бриф эпика на 26 пользовательских замечаний.",
+"Хороший task-файл может выполнить любой агент — и это проверялось буквально.",
+"Родилось из инцидента, когда дорогие модели случайно клонировались в субагентов — предсказуемость дороже пиковой мощности.",
+"Merge-конфликты между агентами исчезли как класс — не потому что git умный, а потому что драться не за что.",
+"Неперегнанный тест = неверифицированный тест — эту фразу мы выучили дорого (следующий слайд).",
+"Реальные поимки: «инсталляторы пересобраны» при старых timestamps; тег на неправильном коммите.",
+"Контекст-окно — расходник; всё важное обязано пережить перезапуск.",
+"Скилл, куда записали номера строк, начинает врать через два релиза — поэтому туда пишут принципы, а не координаты.",
+"Агентам дают не ssh, а инструменты с ограничениями — деструктивные команды заблокированы на уровне канала.",
+"Урок не «внешние агенты плохие», а «неперегнанный тест опасен физически».",
+"Мандат пишется файлом: агент читает те же правила, что и все, — и его работа проверяема теми же гейтами.",
+"Люди и агенты в одном flow: агент ускоряет ревью, но не подменяет приёмку.",
+"Ключ — не чинить симптом, а строить матрицу поддержки: «доделываем по запросу» превратили в «закрыли класс».",
+"Каждый пункт стоил реального времени/железа — потому и держится.",
+"Ничего из показанного не требует большой компании — требует дисциплины артефактов."
+]
+</script>
+
+</body>
+</html>
