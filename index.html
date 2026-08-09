@@ -171,11 +171,24 @@ section.cover{padding:0}
 .fan .spoke{position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:12px;
   display:flex;align-items:center;justify-content:center; background:color-mix(in oklab,var(--c) 20%,var(--panel));
   border:1.6px solid var(--c); box-shadow:0 0 22px color-mix(in oklab,var(--c) 45%,transparent);
-  opacity:0; transform:translate(0,0) scale(.4); transition:opacity .5s ease, transform .7s cubic-bezier(.2,.8,.2,1)}
+  opacity:0; transform:translate(0,0) scale(.4)}
 .fan .spoke svg{width:22px;height:22px;stroke:var(--c);fill:none;stroke-width:2.2}
-section[data-deck-active] .fan .spoke{opacity:1}
-section[data-deck-active] .fan .spoke{transform:translate(var(--tx),var(--ty)) scale(1)}
+section[data-deck-active] .fan .spoke{animation:spokeLoop 9s cubic-bezier(.25,.7,.3,1) infinite; animation-delay:var(--d,0s)}
+@keyframes spokeLoop{
+  0%{opacity:0; transform:translate(0,0) scale(.4)}
+  10%{opacity:1}
+  25%{transform:translate(var(--tx),var(--ty)) scale(1)}
+  80%{opacity:1; transform:translate(var(--tx),var(--ty)) scale(1)}
+  93%{opacity:0; transform:translate(var(--tx),var(--ty)) scale(.55)}
+  100%{opacity:0; transform:translate(0,0) scale(.4)}
+}
 .fan .ring{position:absolute; inset:60px; border:1px dashed rgba(150,180,210,.18); border-radius:50%}
+section[data-deck-active] .fan .ring{animation:ringSpin 80s linear infinite}
+@keyframes ringSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){
+  section[data-deck-active] .fan .spoke{animation:none; opacity:1; transform:translate(var(--tx),var(--ty)) scale(1)}
+  section[data-deck-active] .fan .ring{animation:none}
+}
 
 /* ============ pipeline (5,20) ============ */
 .pipe{display:flex; align-items:stretch; gap:16px; width:100%}
@@ -231,12 +244,12 @@ section.closing{background:radial-gradient(80% 70% at 50% 0%, rgba(74,163,255,.1
       <div class="fan r" style="--i:2">
         <div class="ring"></div>
         <div class="core"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg></div>
-        <div class="spoke lead"   style="--tx:-160px;--ty:-70px;transition-delay:.35s"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg></div>
-        <div class="spoke cc"     style="--tx:-120px;--ty:95px;transition-delay:.45s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/></svg></div>
-        <div class="spoke sonnet" style="--tx:0px;--ty:165px;transition-delay:.55s"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg></div>
-        <div class="spoke art"    style="--tx:160px;--ty:95px;transition-delay:.65s"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg></div>
-        <div class="spoke ext"    style="--tx:170px;--ty:-70px;transition-delay:.75s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4a13 13 0 0 1 0 16M12 4a13 13 0 0 0 0 16"/></svg></div>
-        <div class="spoke gate"   style="--tx:0px;--ty:-165px;transition-delay:.85s"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+        <div class="spoke lead"   style="--tx:-160px;--ty:-70px;--d:.35s"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4z"/></svg></div>
+        <div class="spoke cc"     style="--tx:-120px;--ty:95px;--d:.45s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v4M12 16v4M4 12h4M16 12h4"/></svg></div>
+        <div class="spoke sonnet" style="--tx:0px;--ty:165px;--d:.55s"><svg viewBox="0 0 24 24"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z"/></svg></div>
+        <div class="spoke art"    style="--tx:160px;--ty:95px;--d:.65s"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/></svg></div>
+        <div class="spoke ext"    style="--tx:170px;--ty:-70px;--d:.75s"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4a13 13 0 0 1 0 16M12 4a13 13 0 0 0 0 16"/></svg></div>
+        <div class="spoke gate"   style="--tx:0px;--ty:-165px;--d:.85s"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
       </div>
     </div>
   </div>
